@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sistema de Inventario</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #e0f7fa, #fce4ec);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 2rem;
+    }
+
+    .container {
+      background-color: #ffffff;
+      width: 100%;
+      max-width: 700px;
+      padding: 2rem 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    header h1 {
+      color: #333;
+      font-size: 2rem;
+    }
+
+    h2 {
+      margin-bottom: 1rem;
+      color: #444;
+      border-left: 4px solid #007bff;
+      padding-left: 0.5rem;
+      font-size: 1.4rem;
+    }
+
+    input, button {
+      width: 100%;
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+    }
+
+    input:focus {
+      border-color: #007bff;
+      outline: none;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .error {
+      color: red;
+      font-size: 0.9rem;
+    }
+
+    #stock-display ul {
+      list-style-type: none;
+      padding: 0.5rem;
+    }
+
+    #stock-display li {
+      background: #f1f1f1;
+      margin: 0.3rem 0;
+      padding: 0.7rem;
+      border-radius: 6px;
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header>
+      <h1>Sistema de Inventario</h1>
+    </header>
+
+    <!-- Login -->
+    <section id="login-section">
+      <h2>Iniciar Sesión</h2>
+      <form id="login-form">
+        <input type="text" id="username" placeholder="Usuario" required />
+        <input type="password" id="password" placeholder="Contraseña" required />
+        <button type="submit">Ingresar</button>
+        <p id="login-error" class="error"></p>
+      </form>
+    </section>
+
+    <!-- Menú principal -->
+    <section id="menu-section" class="hidden">
+      <h2>Menú Principal</h2>
+      <button onclick="mostrarSeccion('gestion')">Gestión de Productos</button>
+      <button onclick="mostrarSeccion('stock')">Control de Stock</button>
+      <button onclick="generarReporte()">Generar Reporte</button>
+      <button onclick="salir()">Salir</button>
+    </section>
+
+    <!-- Gestión de productos -->
+    <section id="gestion" class="hidden">
+      <h2>Gestión de Productos</h2>
+      <input type="text" id="codigo" placeholder="Código" required />
+      <input type="text" id="nombre" placeholder="Nombre" required />
+      <input type="number" id="precio" placeholder="Precio" required />
+      <input type="number" id="cantidad" placeholder="Cantidad" required />
+      <button onclick="agregarProducto()">Agregar</button>
+      <button onclick="modificarProducto()">Modificar</button>
+      <button onclick="eliminarProducto()">Eliminar</button>
+      <button onclick="volverAlMenu()">Volver</button>
+    </section>
+
+    <!-- Control de stock -->
+    <section id="stock" class="hidden">
+      <h2>Control de Stock</h2>
+      <input type="text" id="codigoStock" placeholder="Código de Producto" />
+      <input type="number" id="nuevaCantidad" placeholder="Nueva Cantidad" />
+      <button onclick="actualizarStock()">Actualizar Stock</button>
+      <button onclick="verStock()">Ver Stock</button>
+      <div id="stock-display"></div>
+      <button onclick="volverAlMenu()">Volver</button>
+    </section>
+  </main>
+
+  <!-- Lógica JS -->
+  <script>
+    let productos = [];
+
+    document.getElementById("login-form").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const user = document.getElementById("username").value.trim();
+      const pass = document.getElementById("password").value.trim();
+
+      if (user === "admin" && pass === "1234") {
+        document.getElementById("login-section").classList.add("hidden");
+        document.getElementById("menu-section").classList.remove("hidden");
+        document.getElementById("login-error").textContent = "";
+      } else {
+        document.getElementById("login-error").textContent = "Usuario o contraseña incorrectos.";
+      }
+    });
+
+    function mostrarSeccion(id) {
+      document.querySelectorAll("section").forEach(sec => sec.classList.add("hidden"));
+      document.getElementById(id).classList.remove("hidden");
+    }
+
+    function volverAlMenu() {
+      document.querySelectorAll("section").forEach(sec => sec.classList.add("hidden"));
+      document.getElementById("menu-section").classList.remove("hidden");
+    }
+
+    function agregarProducto() {
+      const codigo = document.getElementById("codigo").value.trim();
+      const nombre = document.getElementById("nombre").value.trim();
+      const precio = parseFloat(document.getElementById("precio").value);
+      const cantidad = parseInt(document.getElementById("cantidad").value);
+      if (!codigo || !nombre || isNaN(precio) || isNaN(cantidad)) return alert("Completa todos los campos.");
+      productos.push({ codigo, nombre, precio, cantidad });
+      alert("Producto agregado.");
+    }
+
+    function modificarProducto() {
+      const codigo = document.getElementById("codigo").value.trim();
+      const producto = productos.find(p => p.codigo === codigo);
+      if (!producto) return alert("Producto no encontrado.");
+      producto.nombre = document.getElementById("nombre").value.trim();
+      producto.precio = parseFloat(document.getElementById("precio").value);
+      producto.cantidad = parseInt(document.getElementById("cantidad").value);
+      alert("Producto modificado.");
+    }
+
+    function eliminarProducto() {
+      const codigo = document.getElementById("codigo").value.trim();
+      const index = productos.findIndex(p => p.codigo === codigo);
+      if (index === -1) return alert("Producto no encontrado.");
+      productos.splice(index, 1);
+      alert("Producto eliminado.");
+    }
+
+    function actualizarStock() {
+      const codigo = document.getElementById("codigoStock").value.trim();
+      const cantidad = parseInt(document.getElementById("nuevaCantidad").value);
+      const producto = productos.find(p => p.codigo === codigo);
+      if (!producto) return alert("Producto no encontrado.");
+      producto.cantidad = cantidad;
+      alert("Stock actualizado.");
+    }
+
+    function verStock() {
+      const div = document.getElementById("stock-display");
+      if (productos.length === 0) {
+        div.innerHTML = "<p>No hay productos registrados.</p>";
+        return;
+      }
+      div.innerHTML = "<ul>" + productos.map(p =>
+        `<li><strong>${p.codigo}</strong>: ${p.nombre} - ${p.cantidad} unidades</li>`
+      ).join("") + "</ul>";
+    }
+
+    function generarReporte() {
+      if (productos.length === 0) {
+        alert("No hay productos para el reporte.");
+        return;
+      }
+      let reporte = productos.map(p =>
+        `Producto: ${p.nombre} | Código: ${p.codigo} | Precio: ${p.precio} | Cantidad: ${p.cantidad}`
+      ).join("\n");
+      alert("Reporte generado:\n\n" + reporte);
+    }
+
+    function salir() {
+      location.reload();
+    }
+  </script>
+</body>
+</html>
